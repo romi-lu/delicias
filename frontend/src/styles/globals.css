@@ -1,0 +1,262 @@
+/* Tailwind v4 base import */
+@import "tailwindcss";
+
+/* Design tokens - Paleta y variables del sistema */
+@import "./design-tokens.css";
+
+/* ========== BASE ========== */
+html {
+  scroll-behavior: smooth;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-inter), var(--font-poppins), system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", Helvetica, Arial, sans-serif;
+}
+
+/* ========== ACCESIBILIDAD WCAG 2.1 ========== */
+:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* Ocultar outline por defecto, mostrar solo en focus-visible */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Skip link para navegación por teclado */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.75rem 1.25rem;
+  background: var(--color-primary-600);
+  color: white;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: top var(--transition-base);
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Contraste mínimo 4.5:1 para texto - ya garantizado por tokens */
+/* Reducir movimiento para usuarios con preferencia */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ========== LAYOUT ========== */
+.container {
+  @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12;
+}
+
+/* ========== BOTONES ========== */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  @apply text-white shadow-sm;
+  background-color: var(--color-button);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-outline-secondary {
+  @apply border-2;
+  border-color: var(--color-secondary);
+  color: var(--color-secondary);
+  background: transparent;
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--color-secondary);
+  color: var(--color-text-inverse);
+}
+
+.btn.disabled,
+.btn:disabled {
+  @apply opacity-50 cursor-not-allowed;
+  transform: none !important;
+}
+
+/* ========== TARJETAS ========== */
+.card {
+  @apply rounded-2xl border shadow-sm;
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-hover {
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ========== TIPOGRAFÍA ========== */
+.headline {
+  @apply text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.subheadline {
+  @apply text-base sm:text-lg;
+  color: var(--color-text-muted);
+}
+
+/* ========== NAVBAR ========== */
+.navbar {
+  @apply fixed top-0 left-0 right-0 z-50 transition-all duration-300;
+}
+
+.navbar-inner {
+  @apply container flex h-16 items-center justify-between;
+}
+
+.navbar-blur {
+  background-color: color-mix(in oklab, var(--color-surface) 85%, transparent);
+  @apply backdrop-blur-xl shadow-sm;
+  backdrop-filter: blur(20px);
+}
+
+/* ========== FOOTER ========== */
+.footer {
+  @apply mt-16 border-t;
+  background-color: var(--color-surface-muted);
+  border-color: var(--color-border);
+}
+
+.footer-inner {
+  @apply container py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10;
+}
+
+/* ========== SKELETON ========== */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-muted) 0%,
+    color-mix(in oklab, var(--color-surface-muted) 70%, white) 50%,
+    var(--color-surface-muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ========== ANIMACIONES ========== */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s var(--ease-out-expo) forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s var(--ease-out-expo) forwards;
+}
+
+/* ========== FORMULARIOS ========== */
+.input-base {
+  @apply w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors;
+  border-color: var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.input-base::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.8;
+}
+
+.input-base:hover {
+  border-color: var(--color-border-strong);
+}
+
+.input-base:focus {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary-500) 25%, transparent);
+}
+
+.input-base:focus-visible {
+  outline: none;
+}
+
+/* ========== UTILIDADES ========== */
+.sr-only {
+  @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+}
+
+/* Ocultar scrollbar en overflow-x (categorías navbar) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
