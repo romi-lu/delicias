@@ -1,6 +1,7 @@
 import '../models/pedido.dart';
 import '../models/producto.dart';
 import 'api_service.dart';
+import 'package:dio/dio.dart';
 
 class OrdersService {
   final ApiService _api;
@@ -8,12 +9,16 @@ class OrdersService {
   OrdersService(this._api);
 
   Future<List<Pedido>> misPedidos({int pagina = 1, int limite = 20}) async {
-    final res = await _api.get('/pedidos/mis-pedidos', queryParameters: {'pagina': pagina, 'limite': limite});
-    final list = res['pedidos'] ?? res['data'];
-    if (list is List) {
-      return list.map((e) => Pedido.fromJson(e as Map<String, dynamic>)).toList();
+    try {
+      final res = await _api.get('/pedidos/mis-pedidos', queryParameters: {'pagina': pagina, 'limite': limite});
+      final list = res['pedidos'] ?? res['data'];
+      if (list is List) {
+        return list.map((e) => Pedido.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } catch (_) {
+      return [];
     }
-    return [];
   }
 
   Future<Pedido?> obtenerPedido(int id) async {
@@ -46,6 +51,8 @@ class OrdersService {
           telefonoContacto: pedidoData['telefono_contacto'] as String?,
           notas: pedidoData['notas'] as String?,
           createdAt: DateTime.parse(pedidoData['created_at'] as String),
+          latEntrega: (pedidoData['lat_entrega'] as num?)?.toDouble(),
+          lngEntrega: (pedidoData['lng_entrega'] as num?)?.toDouble(),
           detalles: detalles,
         );
       }
@@ -60,6 +67,8 @@ class OrdersService {
     String? fechaEntrega,
     String? direccionEntrega,
     String? telefonoContacto,
+    double? latEntrega,
+    double? lngEntrega,
     String? notas,
   }) async {
     try {
@@ -68,6 +77,8 @@ class OrdersService {
         if (fechaEntrega != null) 'fecha_entrega': fechaEntrega,
         if (direccionEntrega != null) 'direccion_entrega': direccionEntrega,
         if (telefonoContacto != null) 'telefono_contacto': telefonoContacto,
+        if (latEntrega != null) 'lat_entrega': latEntrega,
+        if (lngEntrega != null) 'lng_entrega': lngEntrega,
         if (notas != null) 'notas': notas,
       });
       if (res['statusCode'] == 201) {
@@ -75,8 +86,23 @@ class OrdersService {
         return CreateOrderResult.success(pedido != null ? Pedido.fromJson(pedido) : null);
       }
       return CreateOrderResult.failure(res['message'] as String? ?? 'Error al crear pedido');
-    } catch (e) {
-      return CreateOrderResult.failure(e.toString().contains('SocketException') ? 'No se pudo conectar al servidor' : 'Error al crear pedido');
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final data = e.response?.data;
+      final serverMsg = (data is Map && data['message'] is String) ? data['message'] as String : null;
+
+      if (status == 401) {
+        return CreateOrderResult.failure('Sesión expirada. Vuelve a iniciar sesión.');
+      }
+      if (status != null) {
+        return CreateOrderResult.failure(serverMsg ?? 'Error del servidor ($status)');
+      }
+      // Sin respuesta: normalmente host incorrecto / backend apagado / sin red
+      return CreateOrderResult.failure(
+        'No se pudo conectar al servidor. Verifica que el backend esté encendido y que tu API_HOST apunte a la IP de tu PC (no "localhost" en celular).',
+      );
+    } catch (_) {
+      return CreateOrderResult.failure('Error al crear pedido');
     }
   }
 

@@ -63,6 +63,8 @@ CREATE TABLE pedidos (
   fecha_entrega DATE,
   direccion_entrega TEXT,
   telefono_contacto VARCHAR(20),
+  lat_entrega NUMERIC(10,7),
+  lng_entrega NUMERIC(10,7),
   notas TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()

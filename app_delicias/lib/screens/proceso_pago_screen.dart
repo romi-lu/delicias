@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme/app_colors.dart';
 import '../providers/cart_provider.dart';
 import '../services/orders_service.dart';
+import '../services/location_service.dart';
 import 'pago_exitoso_screen.dart';
 
 class ProcesoPagoScreen extends StatefulWidget {
@@ -19,21 +20,56 @@ class _ProcesoPagoScreenState extends State<ProcesoPagoScreen> {
   final _nTarjeta = TextEditingController();
   final _titular = TextEditingController();
   final _cvv = TextEditingController();
+  final _direccion = TextEditingController();
+  final _telefono = TextEditingController();
+  final _location = LocationService();
+  double? _latEntrega;
+  double? _lngEntrega;
+  bool _locating = false;
 
   @override
   void dispose() {
     _nTarjeta.dispose();
     _titular.dispose();
     _cvv.dispose();
+    _direccion.dispose();
+    _telefono.dispose();
     super.dispose();
   }
 
   void _msg(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 
+  Future<void> _usarMiUbicacion() async {
+    setState(() => _locating = true);
+    try {
+      await _location.ensurePermissions();
+      final p = await _location.current();
+      if (!mounted) return;
+      setState(() {
+        _latEntrega = p.latitude;
+        _lngEntrega = p.longitude;
+      });
+      _msg('Ubicación capturada');
+    } catch (_) {
+      if (!mounted) return;
+      _msg('No se pudo obtener tu ubicación. Activa GPS y permisos.');
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
   Future<void> _pagar() async {
     final cart = context.read<CartProvider>();
     if (cart.items.isEmpty) {
       _msg('Tu carrito está vacío');
+      return;
+    }
+    if (_direccion.text.trim().isEmpty) {
+      _msg('Ingresa tu dirección de entrega');
+      return;
+    }
+    if (_telefono.text.trim().length < 6) {
+      _msg('Ingresa un teléfono de contacto válido');
       return;
     }
     if (_metodo == 'Tarjeta') {
@@ -47,6 +83,10 @@ class _ProcesoPagoScreenState extends State<ProcesoPagoScreen> {
 
     final result = await context.read<OrdersService>().crearPedido(
           productos: cart.toOrderItems(),
+          direccionEntrega: _direccion.text.trim(),
+          telefonoContacto: _telefono.text.trim(),
+          latEntrega: _latEntrega,
+          lngEntrega: _lngEntrega,
           notas: 'Pago: $_metodo',
         );
 
@@ -103,6 +143,53 @@ class _ProcesoPagoScreenState extends State<ProcesoPagoScreen> {
                     child: Text('Total a pagar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.text)),
                   ),
                   Text('S/${cart.total.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.text)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Datos de entrega', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.text)),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _direccion,
+                    decoration: const InputDecoration(labelText: 'Dirección de entrega'),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _telefono,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(labelText: 'Teléfono de contacto'),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _locating ? null : _usarMiUbicacion,
+                          icon: _locating
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.my_location_outlined),
+                          label: const Text('Usar mi ubicación'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    (_latEntrega != null && _lngEntrega != null)
+                        ? 'Ubicación: ${_latEntrega!.toStringAsFixed(6)}, ${_lngEntrega!.toStringAsFixed(6)}'
+                        : 'Ubicación: no capturada (opcional)',
+                    style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w700),
+                  ),
                 ],
               ),
             ),

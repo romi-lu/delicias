@@ -83,6 +83,8 @@ class Pedido {
   final String? telefonoContacto;
   final String? notas;
   final DateTime createdAt;
+  final double? latEntrega;
+  final double? lngEntrega;
   final List<PedidoDetalle> detalles;
 
   Pedido({
@@ -94,6 +96,8 @@ class Pedido {
     this.telefonoContacto,
     this.notas,
     required this.createdAt,
+    this.latEntrega,
+    this.lngEntrega,
     this.detalles = const [],
   });
 
@@ -126,6 +130,8 @@ class Pedido {
       telefonoContacto: json['telefono_contacto'] as String?,
       notas: json['notas'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
+      latEntrega: (json['lat_entrega'] as num?)?.toDouble(),
+      lngEntrega: (json['lng_entrega'] as num?)?.toDouble(),
       detalles: detalles,
     );
   }

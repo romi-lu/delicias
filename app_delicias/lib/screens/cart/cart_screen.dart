@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
-import '../../services/orders_service.dart';
+import '../proceso_pago_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -81,14 +81,6 @@ class CartScreen extends StatelessWidget {
   }
 
   Future<void> _checkout(BuildContext context, CartProvider cart) async {
-    final ordersService = context.read<OrdersService>();
-    final result = await ordersService.crearPedido(productos: cart.toOrderItems());
-    if (result.success && context.mounted) {
-      cart.clear();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pedido creado exitosamente')));
-      context.go('/orders');
-    } else if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.error ?? 'Error')));
-    }
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => const ProcesoPagoScreen()));
   }
 }

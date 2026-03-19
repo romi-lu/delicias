@@ -43,6 +43,8 @@ export class PedidosService {
     const total = detalles.reduce((acc, d) => acc + this.toFloat(d.subtotal), 0);
 
     const fechaEntrega = dto.fecha_entrega ? new Date(dto.fecha_entrega) : null;
+    const latEntrega = dto.lat_entrega ?? null;
+    const lngEntrega = dto.lng_entrega ?? null;
 
     const creado = await this.prisma.pedido.create({
       data: {
@@ -52,6 +54,8 @@ export class PedidosService {
         fecha_entrega: fechaEntrega,
         direccion_entrega: dto.direccion_entrega || null,
         telefono_contacto: dto.telefono_contacto || null,
+        lat_entrega: latEntrega,
+        lng_entrega: lngEntrega,
         notas: dto.notas || null,
         detalles: { create: detalles },
       },
@@ -104,6 +108,9 @@ export class PedidosService {
       created_at: p.created_at,
       fecha_pedido: p.created_at,
       notas: p.notas || undefined,
+      direccion_entrega: (p as any).direccion_entrega ?? null,
+      lat_entrega: (p as any).lat_entrega ?? null,
+      lng_entrega: (p as any).lng_entrega ?? null,
       total_productos: p.detalles.reduce((acc, d) => acc + d.cantidad, 0),
     }));
 
@@ -130,7 +137,16 @@ export class PedidosService {
     return {
       status: 200,
       body: {
-        pedido: { id: pedido.id, total: this.toFloat(pedido.total), estado: pedido.estado, created_at: pedido.created_at, notas: pedido.notas || null, direccion_entrega: pedido.direccion_entrega || null },
+        pedido: {
+          id: pedido.id,
+          total: this.toFloat(pedido.total),
+          estado: pedido.estado,
+          created_at: pedido.created_at,
+          notas: pedido.notas || null,
+          direccion_entrega: pedido.direccion_entrega || null,
+          lat_entrega: (pedido as any).lat_entrega ?? null,
+          lng_entrega: (pedido as any).lng_entrega ?? null,
+        },
         detalles: pedido.detalles.map((d) => ({
           producto_nombre: d.producto?.nombre || null,
           producto_imagen: d.producto?.imagen || null,
@@ -206,6 +222,8 @@ export class PedidosService {
       notas: p.notas ?? null,
       direccion_entrega: (p as any).direccion_entrega ?? null,
       telefono_contacto: (p as any).telefono_contacto ?? null,
+      lat_entrega: (p as any).lat_entrega ?? null,
+      lng_entrega: (p as any).lng_entrega ?? null,
       total_productos: p.detalles.reduce((acc, d) => acc + d.cantidad, 0),
     }));
 
@@ -231,7 +249,9 @@ export class PedidosService {
       body: {
         pedido: {
           id: p.id,
-          usuario: p.usuario ? { id: p.usuario.id, nombre: p.usuario.nombre, apellido: p.usuario.apellido, email: p.usuario.email, telefono: p.usuario.telefono } : null,
+          usuario: p.usuario
+            ? { id: p.usuario.id, nombre: p.usuario.nombre, apellido: p.usuario.apellido, email: p.usuario.email, telefono: p.usuario.telefono }
+            : null,
           total: this.toFloat(p.total),
           estado: p.estado,
           created_at: p.created_at,
@@ -239,6 +259,8 @@ export class PedidosService {
           notas: p.notas ?? null,
           direccion_entrega: p.direccion_entrega ?? null,
           telefono_contacto: p.telefono_contacto ?? null,
+          lat_entrega: (p as any).lat_entrega ?? null,
+          lng_entrega: (p as any).lng_entrega ?? null,
         },
         detalles: p.detalles.map((d) => ({
           producto_nombre: d.producto?.nombre || null,

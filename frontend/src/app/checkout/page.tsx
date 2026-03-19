@@ -19,6 +19,8 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cash">("card");
   const [fechaEntrega, setFechaEntrega] = useState("");
   const [direccionEntrega, setDireccionEntrega] = useState("");
+  const [latEntrega, setLatEntrega] = useState("");
+  const [lngEntrega, setLngEntrega] = useState("");
   const [telefonoContacto, setTelefonoContacto] = useState("");
   const [notas, setNotas] = useState("");
   const [cardNumber, setCardNumber] = useState("");
@@ -105,11 +107,16 @@ export default function CheckoutPage() {
     setLoading(true);
     setMessage(null);
     try {
+      const latNum = latEntrega ? Number(latEntrega) : undefined;
+      const lngNum = lngEntrega ? Number(lngEntrega) : undefined;
+
       const orderData = {
         productos: cartItemsTyped.map((item) => ({ id: item.id, cantidad: item.cantidad })),
         fecha_entrega: fechaEntrega,
         direccion_entrega: direccionEntrega,
         telefono_contacto: telefonoContacto,
+        ...(latNum && !Number.isNaN(latNum) ? { lat_entrega: latNum } : {}),
+        ...(lngNum && !Number.isNaN(lngNum) ? { lng_entrega: lngNum } : {}),
         notas: notas || undefined,
         pago: {
           metodo: paymentMethod,
@@ -316,6 +323,32 @@ export default function CheckoutPage() {
                     placeholder="Av. Siempre Viva 742"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium">Latitud (opcional)</label>
+                  <input
+                    type="text"
+                    value={latEntrega}
+                    onChange={(e) => setLatEntrega(e.target.value)}
+                    className="input-base mt-1"
+                    placeholder="-12.046374"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Longitud (opcional)</label>
+                  <input
+                    type="text"
+                    value={lngEntrega}
+                    onChange={(e) => setLngEntrega(e.target.value)}
+                    className="input-base mt-1"
+                    placeholder="-77.042793"
+                  />
+                </div>
+                <p className="text-xs text-gray-600 self-end">
+                  Si ingresas latitud y longitud, se usará esa ubicación en el mapa de seguimiento del pedido.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

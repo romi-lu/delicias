@@ -15,6 +15,7 @@ class SeguimientoScreen extends StatefulWidget {
 class _SeguimientoScreenState extends State<SeguimientoScreen> {
   bool _loading = true;
   List<Pedido> _pedidos = [];
+  String? _error;
 
   @override
   void initState() {
@@ -28,6 +29,7 @@ class _SeguimientoScreenState extends State<SeguimientoScreen> {
     if (mounted) {
       setState(() {
         _pedidos = list;
+        _error = list.isEmpty ? 'No se pudieron cargar tus pedidos. Revisa que el backend esté encendido y tu sesión sea válida.' : null;
         _loading = false;
       });
     }
@@ -58,10 +60,15 @@ class _SeguimientoScreenState extends State<SeguimientoScreen> {
                       children: [
                         Icon(Icons.receipt_long_outlined, size: 64, color: AppColors.muted),
                         const SizedBox(height: 16),
-                        const Text(
-                          'Aún no tienes pedidos',
+                        Text(
+                          _error ?? 'Aún no tienes pedidos',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.text),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.text),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          onPressed: _load,
+                          child: const Text('Reintentar'),
                         ),
                       ],
                     ),

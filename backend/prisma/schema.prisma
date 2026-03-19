@@ -111,6 +111,8 @@ model Pedido {
   fecha_entrega     DateTime?     @db.Date @map("fecha_entrega")
   direccion_entrega String?       @db.Text @map("direccion_entrega")
   telefono_contacto String?       @db.VarChar(20) @map("telefono_contacto")
+  lat_entrega       Decimal?      @db.Decimal(10, 7) @map("lat_entrega")
+  lng_entrega       Decimal?      @db.Decimal(10, 7) @map("lng_entrega")
   notas             String?       @db.Text
   created_at        DateTime      @default(now()) @map("created_at")
   updated_at        DateTime      @updatedAt @map("updated_at")

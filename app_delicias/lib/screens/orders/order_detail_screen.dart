@@ -76,7 +76,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final p = _pedido!;
     final stage = _trackingStage(p.estado);
     final steps3 = const ['Preparando', 'En camino', 'Entregado'];
-    final destination = _tryParseLatLng(p.direccionEntrega);
+    // Usar coordenadas si vienen del backend, si no intentar parsear la dirección
+    final destination = (p.latEntrega != null && p.lngEntrega != null)
+        ? LatLng(p.latEntrega!, p.lngEntrega!)
+        : _tryParseLatLng(p.direccionEntrega);
     const store = LatLng(-12.046374, -77.042793); // Lima (placeholder)
     return Scaffold(
       appBar: AppBar(

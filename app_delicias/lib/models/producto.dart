@@ -1,3 +1,5 @@
+import '../config/api_config.dart';
+
 class Producto {
   final int id;
   final String nombre;
@@ -38,6 +40,7 @@ class Producto {
   String get imagenUrl {
     if (imagen == null || imagen!.isEmpty) return '';
     if (imagen!.startsWith('http')) return imagen!;
-    return 'http://localhost:6002/uploads/${imagen!.replaceFirst('/', '')}';
+    final rel = imagen!.replaceFirst(RegExp(r'^/+'), '');
+    return '${ApiConfig.uploadsUrl}/$rel';
   }
 }

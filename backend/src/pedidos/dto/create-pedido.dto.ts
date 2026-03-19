@@ -1,4 +1,4 @@
-import { IsArray, IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsDateString, IsNotEmpty, IsOptional, IsString, IsNumber, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ProductoItemDto {
@@ -26,6 +26,14 @@ export class CreatePedidoDto {
   @IsOptional()
   @IsString()
   telefono_contacto?: string;
+
+  @IsOptional()
+  @IsNumber()
+  lat_entrega?: number;
+
+  @IsOptional()
+  @IsNumber()
+  lng_entrega?: number;
 
   @IsOptional()
   @IsString()
