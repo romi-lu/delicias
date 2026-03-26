@@ -9,24 +9,32 @@ import * as yaml from 'js-yaml';
 // Carga backend/.env antes de Nest (local). En Railway las variables ya vienen en process.env.
 loadDotenv({ path: join(__dirname, '..', '.env') });
 
+// Prisma pide DIRECT_URL en el schema; en Railway suele bastar DATABASE_URL (misma cadena).
+const _db = process.env.DATABASE_URL?.trim();
+if (_db && !process.env.DIRECT_URL?.trim()) {
+  process.env.DIRECT_URL = _db;
+}
+
 function assertRequiredEnvForStartup(): void {
   const missing: string[] = [];
   if (!process.env.JWT_SECRET?.trim()) missing.push('JWT_SECRET');
   if (!process.env.DATABASE_URL?.trim()) missing.push('DATABASE_URL');
-  if (!process.env.DIRECT_URL?.trim()) missing.push('DIRECT_URL');
   if (missing.length === 0) return;
 
   // eslint-disable-next-line no-console
-  console.error(`
-[FATAL] Faltan variables de entorno: ${missing.join(', ')}
-
-En Railway → servicio del BACKEND → Variables, define:
-  · JWT_SECRET     → cadena aleatoria larga (ej. openssl rand -base64 48)
-  · DATABASE_URL   → URL de Postgres (si añades plugin Postgres, usa "Reference" a DATABASE_URL)
-  · DIRECT_URL     → igual que DATABASE_URL salvo que Prisma/Supabase indique otra (misma URL suele valer)
-
-Luego Redeploy. Los "Build logs" pueden estar OK; el fallo del healthcheck sale en **Deploy logs** si el proceso muere al arrancar.
-`);
+  console.error(
+    `[FATAL] Faltan variables de entorno: ${missing.join(', ')}\n\n` +
+      'En Railway:\n' +
+      '  1) Abre el PROYECTO → el SERVICIO que despliega la API (no Postgres solo).\n' +
+      '  2) Pestaña "Variables" → "+ New Variable" (o "Raw Editor").\n' +
+      '  3) Añade exactamente:\n' +
+      '       JWT_SECRET = (texto largo aleatorio; en PowerShell: [Convert]::ToBase64String((1..32|%{Get-Random -Max 256})))\n' +
+      '       DATABASE_URL = URL de Postgres\n' +
+      '     Si tienes Postgres en Railway: en el servicio Postgres copia "DATABASE_URL" y pégala en el servicio del backend,\n' +
+      '     o usa "Variable Reference" ${{Postgres.DATABASE_URL}} según te muestre el asistente.\n' +
+      '  4) Guarda y pulsa Redeploy en el servicio del backend.\n' +
+      '  (DIRECT_URL no hace falta si ya tienes DATABASE_URL; se reutiliza automáticamente.)\n',
+  );
   process.exit(1);
 }
 
