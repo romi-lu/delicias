@@ -50,8 +50,7 @@ async function bootstrap() {
     });
   }
 
-  // Puerto fijo backend: 6002 (no modificar)
-  const PORT = 6002;
-  await app.listen(PORT);
+  const PORT = Number(process.env.PORT) || 6002;
+  await app.listen(PORT, '0.0.0.0');
 }
 bootstrap();

@@ -2,7 +2,7 @@
 
 Aplicación web profesional para una panadería, migrada y consolidada en un monorepo con:
 - Frontend: Next.js 15 (App Router, SSR/SSG), Tailwind CSS.
-- Backend: NestJS 11 (JWT, Prisma), MySQL como base de datos.
+- Backend: NestJS 11 (JWT, Prisma), PostgreSQL (Supabase compatible) como base de datos.
 
 ## 🚀 Características
 
@@ -18,7 +18,7 @@ Aplicación web profesional para una panadería, migrada y consolidada en un mon
 - Módulos para autenticación, usuarios, productos, categorías, pedidos y facturación.
 - Validación con `class-validator` y `ValidationPipe` global.
 - JWT con expiración de 24h y estrategia Passport.
-- Prisma ORM con `provider = "mysql"` y modelos listos para producción.
+- Prisma ORM con `provider = "postgresql"` y modelos listos para producción.
 - Servido de archivos estáticos en `/uploads` (imágenes de productos).
 - Documentación de API con Swagger en `/api/docs` y YAML en `/api/docs-yaml`.
 
@@ -26,9 +26,9 @@ Aplicación web profesional para una panadería, migrada y consolidada en un mon
 
 ```
 delicias/
-├── backend/               # NestJS + Prisma (MySQL)
+├── backend/               # NestJS + Prisma (PostgreSQL)
 │   ├── src/               # Módulos, controladores y servicios
-│   ├── prisma/            # Esquema Prisma (MySQL)
+│   ├── prisma/            # Esquema Prisma (PostgreSQL)
 │   ├── uploads/           # Archivos subidos (servidos en /uploads)
 │   └── scripts/seed-admin.js
 ├── frontend/              # Next.js (App Router)
@@ -42,8 +42,10 @@ delicias/
 ## 📋 Requisitos Previos
 
 - Node.js 18+ (recomendado 20+).
-- MySQL 8.x en local o en servicio gestionado.
+- Postgres (recomendado Supabase) en local o en servicio gestionado.
 - npm (o yarn/pnpm).
+- Flutter 3.9+ (para ejecutar `app_delicias`).
+- Git (para clonar el repo en la otra PC).
 
 ## ⚙️ Configuración
 
@@ -56,23 +58,37 @@ npm run install-all
 2) Backend — Variables de entorno (`backend/.env`):
 
 ```env
-PORT=5001
-DATABASE_URL="mysql://usuario:password@localhost:3306/delicias"
 JWT_SECRET="tu_jwt_secret_seguro"
-# Opcional para seeding del admin por defecto
+DATABASE_URL="postgresql://usuario:password@localhost:5432/delicias"
+DIRECT_URL="postgresql://usuario:password@localhost:5432/delicias"
+# Credenciales para seeding (opcional)
 ADMIN_EMAIL="admin@delicias.com"
-ADMIN_PASSWORD="admin123"
+ADMIN_PASSWORD="Admin123456!"
+# Opcional (si usas el endpoint de Decolecta / facturación)
+DECOLECTA_BASE_URL="https://api.decolecta.com/v1"
+DECOLECTA_TOKEN="TU_TOKEN_AQUI"
+# Opcional (límite de subida de archivos)
+MAX_FILE_SIZE=5242880
 ```
 
-3) Inicializar Prisma (si es primera vez):
+3) Generar Prisma (si es primera vez):
 
 ```bash
 cd backend
-npx prisma migrate dev
 npx prisma generate
 ```
 
-4) Sembrar admin por defecto (opcional):
+4) Crear tablas en la base de datos:
+
+Si usas Supabase:
+
+```txt
+backend/prisma/supabase-init.sql
+```
+
+Ejecuta ese SQL en Supabase (SQL Editor → New query → Run).
+
+5) Sembrar admin por defecto (opcional):
 
 ```bash
 cd backend
@@ -87,10 +103,38 @@ Desde la raíz del monorepo:
 npm run dev
 ```
 
-- Frontend (Next): http://localhost:3005
-- Backend (Nest): http://localhost:5001
+- Frontend (Next): http://localhost:6001
+- Admin (Next): http://localhost:6003
+- Backend (Nest): http://localhost:6002
 
 El frontend reescribe `/api/*` y `/uploads/*` hacia el backend, por lo que las llamadas `axios` a `/api/...` funcionan sin configurar dominios manualmente.
+
+Docs del backend:
+- http://localhost:6002/api/docs
+- http://localhost:6002/api/docs-yaml
+
+## 📱 App Móvil (Flutter)
+
+En la otra PC (o en la misma red), la app móvil se levanta aparte del monorepo web.
+
+Requisitos:
+- Flutter 3.9+.
+- Tener un emulador o un dispositivo físico, y que `API_HOST:API_PORT` sea accesible desde ese equipo/dispositivo.
+
+1) Ajusta `app_delicias/.env` apuntando al backend de la PC donde corre Nest:
+
+```env
+API_HOST=IP_DE_LA_PC_QUE_CORRE_EL_BACKEND
+API_PORT=6002
+```
+
+2) Ejecuta:
+
+```bash
+cd app_delicias
+flutter pub get
+flutter run
+```
 
 ## 🧪 Pruebas
 
@@ -106,7 +150,7 @@ npm run test:e2e
 ## 🔐 Usuarios por Defecto
 
 Si ejecutaste el seed:
-- Admin: `admin@delicias.com` / `admin123` (puedes cambiarlo en `.env`).
+- Admin: `admin@delicias.com` / `Admin123456!` (puedes cambiarlo en `backend/.env`).
 
 ## 🧰 Tecnologías
 

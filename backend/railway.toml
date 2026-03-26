@@ -1,0 +1,9 @@
+# Fuerza imagen Docker (evita Railpack en monorepo sin "start" en la raíz).
+# En Railway: Source → Root Directory = backend
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 100

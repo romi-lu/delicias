@@ -1,0 +1,66 @@
+# Desarrollo / pruebas locales con contenedores (Railway usa cada Dockerfile por servicio).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: delicias
+      POSTGRES_PASSWORD: delicias
+      POSTGRES_DB: delicias
+    ports:
+      - "5432:5432"
+    volumes:
+      - delicias_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U delicias -d delicias"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "6002:6002"
+    environment:
+      PORT: "6002"
+      DATABASE_URL: postgresql://delicias:delicias@db:5432/delicias
+      DIRECT_URL: postgresql://delicias:delicias@db:5432/delicias
+      JWT_SECRET: ${JWT_SECRET:-cambiar_en_produccion_minimo_32_caracteres}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - backend_uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        BACKEND_URL: http://backend:6002
+    ports:
+      - "6001:3000"
+    environment:
+      PORT: "3000"
+      BACKEND_URL: http://backend:6002
+    depends_on:
+      - backend
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+      args:
+        BACKEND_URL: http://backend:6002
+    ports:
+      - "6003:3000"
+    environment:
+      PORT: "3000"
+      BACKEND_URL: http://backend:6002
+    depends_on:
+      - backend
+
+volumes:
+  delicias_pg:
+  backend_uploads:
