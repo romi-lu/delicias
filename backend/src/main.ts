@@ -9,26 +9,40 @@ import * as yaml from 'js-yaml';
 // Carga backend/.env antes de Nest (local). En Railway las variables ya vienen en process.env.
 loadDotenv({ path: join(__dirname, '..', '.env') });
 
-function assertJwtSecretForStartup(): void {
-  if (process.env.JWT_SECRET?.trim()) return;
+function assertRequiredEnvForStartup(): void {
+  const missing: string[] = [];
+  if (!process.env.JWT_SECRET?.trim()) missing.push('JWT_SECRET');
+  if (!process.env.DATABASE_URL?.trim()) missing.push('DATABASE_URL');
+  if (!process.env.DIRECT_URL?.trim()) missing.push('DIRECT_URL');
+  if (missing.length === 0) return;
+
   // eslint-disable-next-line no-console
   console.error(`
-[FATAL] JWT_SECRET no está definido en este proceso.
+[FATAL] Faltan variables de entorno: ${missing.join(', ')}
 
-Railway (servicio del BACKEND, no el de frontend):
-  1. Variables → "+ New Variable"
-  2. Name:  JWT_SECRET   (exactamente así, en mayúsculas)
-  3. Value: una cadena larga aleatoria (ej. openssl rand -base64 48)
-  4. Guardar → Deploy / Redeploy
+En Railway → servicio del BACKEND → Variables, define:
+  · JWT_SECRET     → cadena aleatoria larga (ej. openssl rand -base64 48)
+  · DATABASE_URL   → URL de Postgres (si añades plugin Postgres, usa "Reference" a DATABASE_URL)
+  · DIRECT_URL     → igual que DATABASE_URL salvo que Prisma/Supabase indique otra (misma URL suele valer)
 
-Comprueba que la variable no tenga espacios en el nombre ni valor vacío.
+Luego Redeploy. Los "Build logs" pueden estar OK; el fallo del healthcheck sale en **Deploy logs** si el proceso muere al arrancar.
 `);
   process.exit(1);
 }
 
 async function bootstrap() {
-  assertJwtSecretForStartup();
-  const app = await NestFactory.create(AppModule);
+  assertRequiredEnvForStartup();
+  let app;
+  try {
+    app = await NestFactory.create(AppModule);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(
+      '[FATAL] Nest no pudo arrancar (revisa DATABASE_URL / red a Postgres, o errores de módulos):',
+      e,
+    );
+    process.exit(1);
+  }
   app.enableCors({
     origin: '*',
     credentials: true,
@@ -75,5 +89,11 @@ async function bootstrap() {
 
   const PORT = Number(process.env.PORT) || 6002;
   await app.listen(PORT, '0.0.0.0');
+  // eslint-disable-next-line no-console
+  console.log(`Listening on 0.0.0.0:${PORT} (healthcheck suele usar GET /)`);
 }
-bootstrap();
+bootstrap().catch((e) => {
+  // eslint-disable-next-line no-console
+  console.error('[FATAL] bootstrap:', e);
+  process.exit(1);
+});

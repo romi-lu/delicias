@@ -5,4 +5,5 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 healthcheckPath = "/"
-healthcheckTimeout = 100
+# Segundos; si Postgres tarda en aceptar conexiones en el primer arranque
+healthcheckTimeout = 300
