@@ -45,10 +45,22 @@ async function bootstrap() {
     app = await NestFactory.create(AppModule);
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.error(
-      '[FATAL] Nest no pudo arrancar (revisa DATABASE_URL / red a Postgres, o errores de módulos):',
-      e,
-    );
+    console.error('[FATAL] Nest no pudo arrancar:', e);
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes('P1001') || msg.includes("Can't reach database")) {
+      // eslint-disable-next-line no-console
+      console.error(`
+→ Prisma no puede conectar al Postgres (P1001).
+
+Si usas Supabase y despliegas en Railway / Fly / etc. (red IPv4):
+  La URL directa db.PROYECTO.supabase.co:5432 a menudo es solo IPv6 y desde ahí falla.
+  Solución: Supabase Dashboard → Settings → Database → sección "Connection string"
+  → pestaña "Transaction pool" o "Session pool" (puerto 6543, host ...pooler.supabase.com).
+  Pega esa URL como DATABASE_URL en Railway (suele incluir ssl y parámetros del pooler).
+
+Comprueba también: proyecto Supabase no pausado, contraseña correcta, ?sslmode=require en la URL.
+`);
+    }
     process.exit(1);
   }
   app.enableCors({
