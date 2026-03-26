@@ -1,0 +1,14 @@
+# Contexto al construir desde la raíz (p. ej. Railway sin Root Directory)
+.git
+**/node_modules
+**/.next
+**/coverage
+frontend
+admin
+app_delicias
+*.md
+backend/.env
+backend/.env.*
+backend/uploads/**
+backend/node_modules
+backend/dist

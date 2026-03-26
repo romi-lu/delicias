@@ -1,0 +1,8 @@
+# Cuando el servicio usa la raíz del repo (sin Root Directory), fuerza Docker.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 100
