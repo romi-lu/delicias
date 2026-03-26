@@ -1,10 +1,33 @@
+import { join } from 'path';
+import { config as loadDotenv } from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as yaml from 'js-yaml';
 
+// Carga backend/.env antes de Nest (local). En Railway las variables ya vienen en process.env.
+loadDotenv({ path: join(__dirname, '..', '.env') });
+
+function assertJwtSecretForStartup(): void {
+  if (process.env.JWT_SECRET?.trim()) return;
+  // eslint-disable-next-line no-console
+  console.error(`
+[FATAL] JWT_SECRET no está definido en este proceso.
+
+Railway (servicio del BACKEND, no el de frontend):
+  1. Variables → "+ New Variable"
+  2. Name:  JWT_SECRET   (exactamente así, en mayúsculas)
+  3. Value: una cadena larga aleatoria (ej. openssl rand -base64 48)
+  4. Guardar → Deploy / Redeploy
+
+Comprueba que la variable no tenga espacios en el nombre ni valor vacío.
+`);
+  process.exit(1);
+}
+
 async function bootstrap() {
+  assertJwtSecretForStartup();
   const app = await NestFactory.create(AppModule);
   app.enableCors({
     origin: '*',

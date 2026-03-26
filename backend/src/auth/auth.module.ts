@@ -5,16 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
-
-function jwtSecretOrThrow(config: ConfigService): string {
-  const secret = config.get<string>('JWT_SECRET');
-  if (!secret?.trim()) {
-    throw new Error(
-      'JWT_SECRET no está definido. Añádelo en Variables del servicio (Railway: JWT_SECRET=una_cadena_larga_y_aleatoria).',
-    );
-  }
-  return secret;
-}
+import { resolveJwtSecret } from './jwt-secret.util';
 
 @Module({
   imports: [
@@ -22,7 +13,7 @@ function jwtSecretOrThrow(config: ConfigService): string {
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        secret: jwtSecretOrThrow(config),
+        secret: resolveJwtSecret(config),
         signOptions: { expiresIn: '24h' },
       }),
       inject: [ConfigService],
