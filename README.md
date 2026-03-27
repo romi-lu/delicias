@@ -121,12 +121,22 @@ Requisitos:
 - Flutter 3.9+.
 - Tener un emulador o un dispositivo físico, y que `API_HOST:API_PORT` sea accesible desde ese equipo/dispositivo.
 
-1) Ajusta `app_delicias/.env` apuntando al backend de la PC donde corre Nest:
+1) Ajusta `app_delicias/.env`:
+
+**Local** (Nest en tu PC, mismo WiFi):
 
 ```env
 API_HOST=IP_DE_LA_PC_QUE_CORRE_EL_BACKEND
 API_PORT=6002
 ```
+
+**Producción** (backend en Railway u otro HTTPS): comenta `API_HOST`/`API_PORT` y usa la URL pública del API (sin `/api` al final):
+
+```env
+API_BASE_URL=https://tu-servicio-backend.up.railway.app
+```
+
+Copia `app_delicias/.env.example` como referencia.
 
 2) Ejecuta:
 
