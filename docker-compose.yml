@@ -25,7 +25,6 @@ services:
     environment:
       PORT: "6002"
       DATABASE_URL: postgresql://delicias:delicias@db:5432/delicias
-      DIRECT_URL: postgresql://delicias:delicias@db:5432/delicias
       JWT_SECRET: ${JWT_SECRET:-cambiar_en_produccion_minimo_32_caracteres}
     depends_on:
       db:

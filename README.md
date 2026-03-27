@@ -60,7 +60,7 @@ npm run install-all
 ```env
 JWT_SECRET="tu_jwt_secret_seguro"
 DATABASE_URL="postgresql://usuario:password@localhost:5432/delicias"
-DIRECT_URL="postgresql://usuario:password@localhost:5432/delicias"
+# Supabase en Railway/hosting IPv4: usa la URL "Transaction pool" (6543), no db.*.supabase.co:5432
 # Credenciales para seeding (opcional)
 ADMIN_EMAIL="admin@delicias.com"
 ADMIN_PASSWORD="Admin123456!"

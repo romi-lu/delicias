@@ -1,12 +1,12 @@
 /**
  * Prueba de conexión a Supabase.
  * Ejecutar: node scripts/test-db-connection.js
- * Asegúrate de tener la contraseña real en .env (DIRECT_URL).
+ * Asegúrate de tener la contraseña real en .env (DATABASE_URL).
  */
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const { execSync } = require('child_process');
 
-const direct = process.env.DIRECT_URL || '';
+const direct = process.env.DATABASE_URL || '';
 const hasPlaceholder = direct.includes('YOUR-DATABASE-PASSWORD') || direct.includes('[YOUR-DATABASE-PASSWORD]');
 
 if (hasPlaceholder) {

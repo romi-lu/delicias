@@ -27,7 +27,7 @@ function loadDotEnv(filePath) {
 }
 
 async function main() {
-  // Asegura que DATABASE_URL/DIRECT_URL estén disponibles al ejecutar por node (sin prisma CLI)
+  // Asegura que DATABASE_URL esté en .env al ejecutar por node (sin prisma CLI)
   loadDotEnv(path.join(__dirname, '..', '.env'));
 
   const prisma = new PrismaClient();

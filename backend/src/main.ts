@@ -9,10 +9,30 @@ import * as yaml from 'js-yaml';
 // Carga backend/.env antes de Nest (local). En Railway las variables ya vienen en process.env.
 loadDotenv({ path: join(__dirname, '..', '.env') });
 
-// Prisma pide DIRECT_URL en el schema; en Railway suele bastar DATABASE_URL (misma cadena).
-const _db = process.env.DATABASE_URL?.trim();
-if (_db && !process.env.DIRECT_URL?.trim()) {
-  process.env.DIRECT_URL = _db;
+function assertSupabaseNotDirectInProduction(): void {
+  if (process.env.NODE_ENV !== 'production') return;
+  const raw = process.env.DATABASE_URL?.trim();
+  if (!raw) return;
+  try {
+    const u = new URL(raw.replace(/^postgresql:/i, 'http:'));
+    const h = u.hostname;
+    const port = u.port || '5432';
+    if (h.startsWith('db.') && h.endsWith('.supabase.co') && port === '5432') {
+      // eslint-disable-next-line no-console
+      console.error(`
+[FATAL] DATABASE_URL apunta al host directo de Supabase (${h}:5432).
+Desde Railway (y muchos hosts IPv4) esa dirección no responde → Prisma P1001.
+
+En Supabase: Settings → Database → Connection string → modo "Transaction" (pooler, puerto 6543).
+Copia esa URL completa y sustituye DATABASE_URL en Railway. Redeploy.
+
+El host del pooler suele contener "pooler" y NO empezar por "db.".
+`);
+      process.exit(1);
+    }
+  } catch {
+    /* URL rara; deja que Prisma falle con su mensaje */
+  }
 }
 
 function assertRequiredEnvForStartup(): void {
@@ -33,13 +53,14 @@ function assertRequiredEnvForStartup(): void {
       '     Si tienes Postgres en Railway: en el servicio Postgres copia "DATABASE_URL" y pégala en el servicio del backend,\n' +
       '     o usa "Variable Reference" ${{Postgres.DATABASE_URL}} según te muestre el asistente.\n' +
       '  4) Guarda y pulsa Redeploy en el servicio del backend.\n' +
-      '  (DIRECT_URL no hace falta si ya tienes DATABASE_URL; se reutiliza automáticamente.)\n',
+      '  Supabase en Railway: usa URL del pool Transaction (6543), no db.*.supabase.co:5432.\n',
   );
   process.exit(1);
 }
 
 async function bootstrap() {
   assertRequiredEnvForStartup();
+  assertSupabaseNotDirectInProduction();
   let app;
   try {
     app = await NestFactory.create(AppModule);
