@@ -28,14 +28,14 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(typeof window !== 'undefined' ? localStorage.getItem('token') : null);
 
-  // Configurar axios con el token
-  useEffect(() => {
+  // Mismo motivo que en admin: efectos de hijos pueden ejecutarse antes que useEffect del provider.
+  if (typeof window !== 'undefined') {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
       delete axios.defaults.headers.common['Authorization'];
     }
-  }, [token]);
+  }
 
   // Interceptor global para manejar 401/403 y forzar cierre de sesión seguro
   useEffect(() => {

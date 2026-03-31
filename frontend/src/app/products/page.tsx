@@ -165,7 +165,14 @@ function ProductsPageContent() {
       setError("");
     } catch (err) {
       console.error("Error cargando productos públicos:", err);
-      setError("Error al cargar productos.");
+      const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+      setError(
+        status === 404 || status === 502 || status === 503
+          ? "No se pudo contactar al servidor (revisa BACKEND_URL en Railway en el servicio frontend)."
+          : axios.isAxiosError(err) && err.response?.status
+            ? `Error al cargar productos (HTTP ${err.response.status}).`
+            : "Error al cargar productos.",
+      );
     } finally {
       setLoading(false);
     }

@@ -33,14 +33,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(readToken());
 
-  // Configurar axios con el token
-  useEffect(() => {
+  // Debe aplicarse en render (no solo en useEffect): los efectos de hijos corren antes que los del
+  // provider, y el dashboard hacía /api/usuarios/admin/* sin Bearer → 401 y "Unauthorized".
+  if (typeof window !== "undefined") {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     } else {
       delete axios.defaults.headers.common["Authorization"];
     }
-  }, [token]);
+  }
 
   const logout = () => {
     setToken(null);

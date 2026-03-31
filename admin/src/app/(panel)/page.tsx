@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import type { AxiosResponse } from "axios";
+import { useAuth } from "@/context/AuthContext";
 import { MetricCard, StatsGrid, Badge, Alert } from "@/design/admin";
 import { formatPEN } from "@/utils/currency";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
@@ -12,53 +13,80 @@ import { DollarSign, Package, Folder, Users } from "lucide-react";
 type Comprobante = { tipo?: "boleta" | "factura"; total?: number; created_at?: string };
 
 export default function AdminDashboardPage() {
+  const { token, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState({ productos: 0, categorias: 0, usuarios: 0, ventasSemana: 0 });
   const [comprobantes, setComprobantes] = useState<Comprobante[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) return;
+
     const loadMetrics = async () => {
+      const getCount = (r: AxiosResponse<unknown>): number => {
+        const data = r?.data as unknown;
+        if (
+          typeof data === "object" &&
+          data !== null &&
+          "pagination" in (data as Record<string, unknown>) &&
+          typeof (data as { pagination?: { total?: unknown } }).pagination?.total !== "undefined"
+        ) {
+          return Number((data as { pagination?: { total?: unknown } }).pagination?.total ?? 0);
+        }
+        if (Array.isArray(data)) return data.length;
+        if (typeof data === "object" && data !== null) {
+          const o = data as Record<string, unknown>;
+          if (typeof o.total !== "undefined") return Number(o.total as number);
+          if (typeof o.count !== "undefined") return Number(o.count as number);
+          if (typeof (o as { Count?: unknown }).Count !== "undefined") return Number((o as { Count?: unknown }).Count as number);
+          if (Array.isArray(o.productos)) return o.productos.length;
+          if (Array.isArray(o.usuarios)) return o.usuarios.length;
+        }
+        return 0;
+      };
+
       try {
-        const [prodRes, catRes, usrRes, compRes] = await Promise.all([
+        const publicCalls = [
           axios.get("/api/productos?pagina=1&limite=1"),
           axios.get("/api/categorias"),
-          axios.get("/api/usuarios/admin/todos?pagina=1&limite=1"),
-          axios.get("/api/facturacion/admin/comprobantes?pagina=1&limite=200"),
-        ]);
-
-        const getCount = (r: AxiosResponse<unknown>): number => {
-          const data = r?.data as unknown;
-          if (
-            typeof data === "object" &&
-            data !== null &&
-            "pagination" in (data as Record<string, unknown>) &&
-            typeof (data as { pagination?: { total?: unknown } }).pagination?.total !== "undefined"
-          ) {
-            return Number((data as { pagination?: { total?: unknown } }).pagination?.total ?? 0);
-          }
-          if (Array.isArray(data)) return data.length;
-          if (typeof data === "object" && data !== null) {
-            const o = data as Record<string, unknown>;
-            if (typeof o.total !== "undefined") return Number(o.total as number);
-            if (typeof o.count !== "undefined") return Number(o.count as number);
-            if (typeof (o as { Count?: unknown }).Count !== "undefined") return Number((o as { Count?: unknown }).Count as number);
-            if (Array.isArray(o.productos)) return o.productos.length;
-            if (Array.isArray(o.usuarios)) return o.usuarios.length;
-          }
-          return 0;
-        };
-
-        const compDataRaw = Array.isArray((compRes.data as any)?.comprobantes)
-          ? ((compRes.data as any).comprobantes as Comprobante[])
-          : Array.isArray(compRes.data)
-            ? (compRes.data as Comprobante[])
+        ] as const;
+        const adminCalls =
+          token != null && token !== ""
+            ? ([
+                axios.get("/api/usuarios/admin/todos?pagina=1&limite=1"),
+                axios.get("/api/facturacion/admin/comprobantes?pagina=1&limite=200"),
+              ] as const)
             : [];
 
+        const settled = await Promise.allSettled([...publicCalls, ...adminCalls]);
+
+        const prodRes = settled[0];
+        const catRes = settled[1];
+        const usrRes = adminCalls.length ? settled[2] : null;
+        const compRes = adminCalls.length ? settled[3] : null;
+
+        let publicErr: string | null = null;
+        if (prodRes.status === "rejected") publicErr = "No se pudo cargar el catálogo de productos (revisa BACKEND_URL en Railway).";
+        else if (catRes.status === "rejected") publicErr = "No se pudieron cargar las categorías.";
+        setError(publicErr);
+
+        const prodOk = prodRes.status === "fulfilled" ? prodRes.value : null;
+        const catOk = catRes.status === "fulfilled" ? catRes.value : null;
+        const usrOk = usrRes?.status === "fulfilled" ? usrRes.value : null;
+        const compOk = compRes?.status === "fulfilled" ? compRes.value : null;
+
+        const compDataRaw = compOk
+          ? Array.isArray((compOk.data as any)?.comprobantes)
+            ? ((compOk.data as any).comprobantes as Comprobante[])
+            : Array.isArray(compOk.data)
+              ? (compOk.data as Comprobante[])
+              : []
+          : [];
+
         setMetrics({
-          productos: getCount(prodRes),
-          categorias: getCount(catRes),
-          usuarios: getCount(usrRes),
+          productos: prodOk ? getCount(prodOk) : 0,
+          categorias: catOk ? getCount(catOk) : 0,
+          usuarios: usrOk ? getCount(usrOk) : 0,
           ventasSemana: compDataRaw
             .filter((c) => !!c.created_at)
             .filter((c) => {
@@ -70,7 +98,6 @@ export default function AdminDashboardPage() {
             .reduce((acc, c) => acc + Number(c.total || 0), 0),
         });
         setComprobantes(compDataRaw);
-        setError(null);
       } catch (e: unknown) {
         const msg = axios.isAxiosError(e)
           ? (e.response?.data as { message?: string } | undefined)?.message || e.message
@@ -82,7 +109,7 @@ export default function AdminDashboardPage() {
     };
 
     loadMetrics();
-  }, []);
+  }, [authLoading, token]);
 
   // Ventas semanales: agrupar por día de la semana
   const ventasSemanalData = useMemo(() => {
