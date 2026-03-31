@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../models/usuario.dart';
 import 'api_service.dart';
 import 'storage_service.dart';
@@ -118,10 +119,28 @@ class AuthService {
   bool get isAdmin => _storage.getUserType() == 'admin';
 
   String _parseError(dynamic e) {
-    if (e.toString().contains('SocketException') || e.toString().contains('Connection')) {
-      return 'No se pudo conectar. Verifica que el servidor esté activo.';
+    if (e is DioException) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.connectionError) {
+        return 'Sin conexión al servidor. En app_delicias/.env define API_BASE_URL=https://tu-backend.up.railway.app (sin /api) y reinicia la app.';
+      }
+      final code = e.response?.statusCode;
+      if (code == 401) return 'Email o contraseña incorrectos';
+      if (code == 403) return 'Acceso denegado';
+      final data = e.response?.data;
+      if (data is Map) {
+        final m = data['message'] ?? data['error'];
+        if (m is String && m.isNotEmpty) return m;
+      }
+      if (code != null) return 'Error del servidor ($code). Intenta de nuevo.';
     }
-    if (e.toString().contains('401')) return 'Email o contraseña incorrectos';
+    final s = e.toString();
+    if (s.contains('SocketException') || s.contains('Connection') || s.contains('XMLHttpRequest')) {
+      return 'No se pudo conectar. Revisa API_BASE_URL en .env para apuntar a Railway y reinicia.';
+    }
+    if (s.contains('401')) return 'Email o contraseña incorrectos';
     return 'Ha ocurrido un error. Intenta de nuevo.';
   }
 }

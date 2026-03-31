@@ -48,7 +48,7 @@ class ApiConfig {
       // ignore: avoid_print
       print(
         '[ApiConfig] Modo local → http://$host:$port/api '
-        '(en móvil real con Railway, define API_BASE_URL en .env y reinicia la app)',
+        '(Flutter web / móvil contra Railway: crea app_delicias/.env con API_BASE_URL=https://tu-backend.up.railway.app y reinicia)',
       );
     }
   }

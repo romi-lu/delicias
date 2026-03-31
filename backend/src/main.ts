@@ -84,9 +84,13 @@ Comprueba también: proyecto Supabase no pausado, contraseña correcta, ?sslmode
     }
     process.exit(1);
   }
+  // origin: true refleja el Origin de la petición (válido con credentials). Con origin: '*'
+  // + credentials: true los navegadores bloquean (Flutter web en localhost → Railway).
   app.enableCors({
-    origin: '*',
+    origin: true,
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   });
 
   app.useGlobalPipes(
