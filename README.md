@@ -113,6 +113,24 @@ Docs del backend:
 - http://localhost:6002/api/docs
 - http://localhost:6002/api/docs-yaml
 
+## ☁️ Railway: conectar backend, frontend y admin
+
+Cada servicio es un contenedor distinto. La tienda y el panel **no** adivinan la URL del API: hay que pasarla con la misma variable en los **dos** Next.js.
+
+1. **Backend** (Nest): en Railway abre ese servicio → **Settings → Networking** y copia la URL pública **HTTPS** (o genera dominio). Debe verse como `https://algo.up.railway.app` — **sin** `/` al final y **sin** `/api`.
+
+2. **Frontend** (tienda): servicio del proyecto → **Variables** → crea o edita:
+   - `BACKEND_URL` = la URL del paso 1 (exactamente la misma cadena).
+
+3. **Admin** (panel): **Variables** → otra vez:
+   - `BACKEND_URL` = la **misma** URL del backend.
+
+4. Guarda y haz **Redeploy** del frontend y del admin (el Dockerfile usa `BACKEND_URL` en el build; si no estaba definida antes, el primer deploy pudo quedar con `localhost`).
+
+5. **App Flutter** (`app_delicias/.env`): `API_BASE_URL` = esa misma URL base del backend (HTTPS, sin `/api`).
+
+Con eso, los rewrites de `next.config.ts` envían `/api/*` y `/uploads/*` al Nest desplegado. Si algo falla, abre la URL del backend en el navegador: debería responder JSON en `/` y Swagger en `/api/docs`.
+
 ## 📱 App Móvil (Flutter)
 
 En la otra PC (o en la misma red), la app móvil se levanta aparte del monorepo web.
