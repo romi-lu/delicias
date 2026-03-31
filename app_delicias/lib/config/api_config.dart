@@ -1,23 +1,56 @@
 // Configuración de la API para conectar con el backend de Delicias.
 //
 // Modos:
-// 1) Producción (Railway, HTTPS): define API_BASE_URL sin barra final, ej.
-//    API_BASE_URL=https://delicias-api.up.railway.app
-// 2) Desarrollo local: API_HOST + API_PORT (http://HOST:PORT/...)
+// 1) Producción (Railway, HTTPS): API_BASE_URL sin barra final y sin /api (la app añade /api y /uploads).
+//    En app_delicias/.env: API_BASE_URL=https://tu-backend.up.railway.app
+//    O: flutter run --dart-define=API_BASE_URL=https://tu-backend.up.railway.app
+// 2) Desarrollo local: API_HOST + API_PORT (misma WiFi; en móvil físico usa la IP de tu PC, no localhost).
 
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiConfig {
   static const String _defaultHost = 'localhost';
   static const int _defaultPort = 6002;
 
+  /// Quita comillas, barras finales y un `/api` erróneo al final (evita /api/api).
+  static String? _normalizeRoot(String? raw) {
+    if (raw == null) return null;
+    var v = raw.trim();
+    if (v.isEmpty) return null;
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+      v = v.substring(1, v.length - 1).trim();
+    }
+    v = v.replaceAll(RegExp(r'/+$'), '');
+    if (v.endsWith('/api')) {
+      v = v.substring(0, v.length - 4);
+      v = v.replaceAll(RegExp(r'/+$'), '');
+    }
+    return v.isEmpty ? null : v;
+  }
+
   /// URL raíz del backend (https en Railway). Si está vacío, se usa host+puerto HTTP local.
   static String? get _publicBase {
-    final v = dotenv.env['API_BASE_URL']?.trim();
-    if (v == null || v.isEmpty) return null;
-    return v.replaceAll(RegExp(r'/+$'), '');
+    const fromDefine = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    final fromEnv = fromDefine.trim().isNotEmpty ? fromDefine : dotenv.env['API_BASE_URL'];
+    return _normalizeRoot(fromEnv);
+  }
+
+  /// Para depuración: qué base usa la app (sin credenciales).
+  static void debugLogResolvedBase() {
+    if (!kDebugMode) return;
+    final root = _publicBase;
+    if (root != null) {
+      // ignore: avoid_print
+      print('[ApiConfig] Railway/producción → $root/api');
+    } else {
+      // ignore: avoid_print
+      print(
+        '[ApiConfig] Modo local → http://$host:$port/api '
+        '(en móvil real con Railway, define API_BASE_URL en .env y reinicia la app)',
+      );
+    }
   }
 
   static String get host {
@@ -47,6 +80,7 @@ class ApiConfig {
     if (root != null) return '$root/uploads';
     return 'http://$host:$port/uploads';
   }
+
   static const Duration connectTimeout = Duration(seconds: 15);
   static const Duration receiveTimeout = Duration(seconds: 15);
 }

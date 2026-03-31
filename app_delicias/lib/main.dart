@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'config/api_config.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
@@ -14,7 +16,15 @@ import 'screens/app_shell.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e, st) {
+    if (kDebugMode) {
+      debugPrint('No se pudo cargar .env (crea app_delicias/.env desde .env.example): $e');
+      debugPrint('$st');
+    }
+  }
+  ApiConfig.debugLogResolvedBase();
   final prefs = await SharedPreferences.getInstance();
   final storage = StorageService(prefs);
   final api = ApiService(storage);

@@ -155,11 +155,13 @@ API_HOST=IP_DE_LA_PC_QUE_CORRE_EL_BACKEND
 API_PORT=6002
 ```
 
-**Producción** (backend en Railway u otro HTTPS): comenta `API_HOST`/`API_PORT` y usa la URL pública del API (sin `/api` al final):
+**Producción** (backend en Railway u otro HTTPS): comenta `API_HOST`/`API_PORT` y usa la **misma** URL base que `BACKEND_URL` en el frontend (solo el servicio Nest, HTTPS, **sin** `/api` al final):
 
 ```env
 API_BASE_URL=https://tu-servicio-backend.up.railway.app
 ```
+
+Tras editar `.env`, haz un **arranque completo** de la app (`flutter run` de nuevo); el hot reload no vuelve a leer variables. En consola de debug verás una línea `[ApiConfig] ...` con la URL que está usando.
 
 Copia `app_delicias/.env.example` como referencia.
 
