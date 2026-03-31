@@ -134,7 +134,7 @@ Con eso, los rewrites de `next.config.ts` envían `/api/*` y `/uploads/*` al Nes
 
 6. **Base de datos (solo servicio del backend Nest)**  
    - `DATABASE_URL` va **únicamente** en el servicio que ejecuta la API (no en frontend ni admin). Si falta o apunta mal, el catálogo y el admin fallan aunque `BACKEND_URL` esté bien.  
-   - **Supabase** desde Railway: usa la cadena **Transaction pool** (host `*.pooler.supabase.com` o similar, puerto **6543**). No uses el host directo `db.PROYECTO.supabase.co:5432` (suele dar P1001 / timeout desde IPv4). Añade `?sslmode=require` y, con pooler de transacciones, `&pgbouncer=true` como en `backend/.env.example`.  
+   - **Supabase** desde Railway: usa la cadena **Transaction pool** (host `*.pooler.supabase.com` o similar, puerto **6543**). No uses el host directo `db.PROYECTO.supabase.co:5432` (suele dar P1001 / timeout desde IPv4). En la URL incluye **`sslmode=require`** y **`pgbouncer=true`** (obligatorio con Prisma + pooler; si falta, verás errores **P2010** u otros fallos raros). Copia el formato de `backend/.env.example`.  
    - **Comprobar conexión:** en el navegador o con `curl`, abre `https://TU-BACKEND.../api/health` → debe responder `{"status":"ok","database":"connected"}`. Si ves `503` y `database":"disconnected"`, el problema es `DATABASE_URL` (o red/firewall), no el frontend.  
    - **Railway Postgres:** referencia la variable del plugin Postgres en el servicio del backend (`${{Postgres.DATABASE_URL}}` o el nombre que muestre el asistente).
 

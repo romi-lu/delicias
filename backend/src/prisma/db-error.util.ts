@@ -15,14 +15,29 @@ export function httpResponseForDbFailure(error: unknown): {
     msg.includes("Can't reach database") ||
     msg.includes('Server has closed the connection') ||
     /P1001/i.test(msg);
-  if (!connectionLike) return null;
-  return {
-    status: 503,
-    body: {
-      error: 'Base de datos',
-      message:
-        'Sin conexión a PostgreSQL. Revisa DATABASE_URL en el servicio del backend (Railway). Con Supabase: URL del pooler (puerto 6543), no db.*.supabase.co:5432; añade sslmode=require y, si usas pooler de transacciones, pgbouncer=true. Codifica caracteres especiales de la contraseña en la URL.',
-      ...(code ? { code } : {}),
-    },
-  };
+  if (connectionLike) {
+    return {
+      status: 503,
+      body: {
+        error: 'Base de datos',
+        message:
+          'Sin conexión a PostgreSQL. Revisa DATABASE_URL en el servicio del backend (Railway). Con Supabase: URL del pooler (puerto 6543), no db.*.supabase.co:5432; añade sslmode=require y pgbouncer=true. Codifica caracteres especiales de la contraseña en la URL.',
+        ...(code ? { code } : {}),
+      },
+    };
+  }
+
+  if (code === 'P2010') {
+    return {
+      status: 503,
+      body: {
+        error: 'Base de datos',
+        message:
+          'Error al ejecutar consulta (P2010). Con Supabase pooler y Prisma, DATABASE_URL debe incluir pgbouncer=true y sslmode=require en la URL del puerto 6543 (modo Transaction).',
+        code: 'P2010',
+      },
+    };
+  }
+
+  return null;
 }
