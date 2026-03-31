@@ -8,9 +8,10 @@ import axios from 'axios';
 // En entorno de servidor (SSR o build), usamos la variable de entorno si está definida,
 // con fallback al backend local.
 const isBrowser = typeof window !== 'undefined';
-axios.defaults.baseURL = isBrowser
-  ? ''
-  : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001';
+// Navegador: rutas relativas → rewrites de Next hacia BACKEND_URL.
+// Servidor (SSR): misma URL que usa next.config (Railway: variable BACKEND_URL en el servicio).
+const serverApiBase = (process.env.BACKEND_URL || 'http://localhost:6002').replace(/\/$/, '');
+axios.defaults.baseURL = isBrowser ? '' : serverApiBase;
 
 const AuthContext = createContext();
 

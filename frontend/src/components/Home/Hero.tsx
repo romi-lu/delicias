@@ -13,8 +13,9 @@ export default function Hero() {
     >
       {/* Fondo con imagen y overlay */}
       <div className="absolute inset-0 -z-10">
+        {/* Remota: el archivo local /images/banners/ no está en el repo y rompe next/image en producción */}
         <Image
-          src="/images/banners/baners 1.jpg"
+          src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1920&q=80"
           alt=""
           fill
           className="object-cover"
