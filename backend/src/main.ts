@@ -124,6 +124,7 @@ Comprueba también: proyecto Supabase no pausado, contraseña correcta, ?sslmode
         message: 'Delicias API',
         api: '/api',
         docs: '/api/docs',
+        health: '/api/health',
       });
     });
   }

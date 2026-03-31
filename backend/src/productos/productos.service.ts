@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { httpResponseForDbFailure } from '../prisma/db-error.util';
 import * as path from 'path';
 import * as fs from 'fs';
 import { CreateProductoDto } from './dto/create-producto.dto';
@@ -130,6 +131,10 @@ export class ProductosService {
       };
     } catch (error) {
       if (params.file) this.safeUnlink(params.file.path);
+      // eslint-disable-next-line no-console
+      console.error('[productos.crear]', error);
+      const db = httpResponseForDbFailure(error);
+      if (db) return db;
       return { status: 500, body: { error: 'Error interno', message: 'Error al crear producto' } };
     }
   }
@@ -213,6 +218,10 @@ export class ProductosService {
       };
     } catch (error) {
       if (params.file) this.safeUnlink(params.file.path);
+      // eslint-disable-next-line no-console
+      console.error('[productos.actualizar]', error);
+      const db = httpResponseForDbFailure(error);
+      if (db) return db;
       return { status: 500, body: { error: 'Error interno', message: 'Error al actualizar producto' } };
     }
   }
