@@ -80,11 +80,16 @@ export class CategoriasController {
       }),
       limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880') },
       fileFilter: (req: any, file: Express.Multer.File, cb: FileFilterCallback) => {
-        const allowedTypes = /jpeg|jpg|png|gif|webp/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
-        if (mimetype && extname) return cb(null, true);
-        cb(Object.assign(new Error('Solo se permiten imágenes (jpeg, jpg, png, gif, webp)'), { status: 400 }));
+        const ext = path.extname(file.originalname).toLowerCase();
+        const extOk = /\.(jpe?g|png|gif|webp|avif)$/i.test(ext);
+        const mimeOk = /^image\/(jpeg|jpg|png|gif|webp|avif)$/i.test(file.mimetype || '');
+        if (extOk && mimeOk) return cb(null, true);
+        cb(
+          Object.assign(
+            new Error('Solo se permiten imágenes (JPEG, PNG, GIF, WebP, AVIF)'),
+            { status: 400 },
+          ),
+        );
       },
     };
   }
