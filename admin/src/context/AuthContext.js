@@ -8,7 +8,9 @@ import axios from "axios";
 // pasen por los rewrites de Next.js (ver next.config.ts) y así evitamos problemas de CORS.
 // En SSR/build, usamos la variable de entorno con fallback al backend local.
 const isBrowser = typeof window !== "undefined";
-axios.defaults.baseURL = isBrowser ? "" : process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:6002";
+// Misma lógica que el frontend: SSR usa BACKEND_URL (Railway). No hace falta NEXT_PUBLIC_API_BASE_URL.
+const serverApiBase = (process.env.BACKEND_URL || "http://localhost:6002").replace(/\/$/, "");
+axios.defaults.baseURL = isBrowser ? "" : serverApiBase;
 
 const AuthContext = createContext();
 

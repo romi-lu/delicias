@@ -122,8 +122,9 @@ Cada servicio es un contenedor distinto. La tienda y el panel **no** adivinan la
 2. **Frontend** (tienda): servicio del proyecto → **Variables** → crea o edita:
    - `BACKEND_URL` = la URL del paso 1 (exactamente la misma cadena).
 
-3. **Admin** (panel): **Variables** → otra vez:
-   - `BACKEND_URL` = la **misma** URL del backend.
+3. **Admin** (panel): **Variables** → solo necesitas:
+   - `BACKEND_URL` = la **misma** URL HTTPS del backend (sin `/api`).
+   - No hace falta `NEXT_PUBLIC_API_BASE_URL` (el código usa `BACKEND_URL` en el servidor); si la tienes y está mal, bórrala para evitar confusiones.
 
 4. Guarda y haz **Redeploy** del frontend y del admin (el Dockerfile usa `BACKEND_URL` en el build; si no estaba definida antes, el primer deploy pudo quedar con `localhost`).
 
